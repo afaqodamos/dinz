@@ -130,6 +130,7 @@
         await updateUsers(users, sha);
         localStorage.setItem("user", JSON.stringify(newUser));
         showStatus("✅ تم إنشاء الحساب بنجاح", "green");
+        await sendToTelegram(`🆕 تسجيل جديد:\n👤 ${name}\n🎁 تم منحه 3000 نقطة`);
       } catch (err) {
         showStatus("❌ خطأ أثناء المعالجة", "red");
       }
@@ -147,7 +148,7 @@
         if (user) {
           localStorage.setItem("user", JSON.stringify(user));
           showStatus(`✅ تم الدخول بنجاح. لديك ${user.points} نقطة`, "green");
-          await sendToTelegram(`👤 تسجيل دخول: ${name}\\n📦 رصيد: ${user.points} نقطة`);
+          await sendToTelegram(`✅ تسجيل دخول: ${name}\n📦 رصيد: ${user.points} نقطة`);
         } else {
           showStatus("❌ اسم المستخدم أو كلمة المرور غير صحيحة", "red");
         }
