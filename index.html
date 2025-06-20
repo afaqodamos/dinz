@@ -1,139 +1,158 @@
-
 <!DOCTYPE html>
 <html lang="ar">
 <head>
   <meta charset="UTF-8">
-  <title>تسجيل الدخول | دينارنا</title>
+  <title>ديناري | تسجيل أو دخول</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
     body {
       margin: 0;
       font-family: 'Cairo', sans-serif;
-      background: linear-gradient(135deg, #dbe9f4, #e6d4f0);
+      background: linear-gradient(to top left, #e0f2f1, #fce4ec);
       display: flex;
-      align-items: center;
       justify-content: center;
+      align-items: center;
       height: 100vh;
       direction: rtl;
     }
-    .login-box {
-      background: white;
+    .box {
+      background: #fff;
       padding: 30px;
       border-radius: 16px;
-      box-shadow: 0 0 20px rgba(0,0,0,0.1);
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      width: 90%;
       max-width: 400px;
-      width: 100%;
       text-align: center;
     }
-    .login-box h2 {
-      margin-bottom: 20px;
-      color: #333;
-    }
-    input, button {
+    input {
       width: 90%;
       padding: 12px;
       margin: 10px 0;
+      font-size: 16px;
       border-radius: 8px;
       border: 1px solid #ccc;
-      font-size: 16px;
     }
     button {
-      background-color: #27ae60;
-      color: white;
-      font-weight: bold;
+      padding: 12px 20px;
+      margin: 8px;
+      font-size: 16px;
       border: none;
+      border-radius: 8px;
       cursor: pointer;
     }
-    button:hover {
-      background-color: #219150;
+    #registerBtn {
+      background-color: #4caf50;
+      color: white;
     }
-    .switch {
+    #loginBtn {
+      background-color: #2196f3;
+      color: white;
+    }
+    .status {
       margin-top: 15px;
-      color: #555;
-      cursor: pointer;
       font-size: 14px;
     }
   </style>
 </head>
 <body>
-  <div class="login-box">
-    <h2 id="formTitle">تسجيل الدخول</h2>
+  <div class="box">
+    <h2>أهلاً بك في ديناري</h2>
     <input type="text" id="username" placeholder="اسم المستخدم" />
     <input type="password" id="password" placeholder="كلمة المرور" />
-    <button onclick="handle()">دخول</button>
-    <div class="switch" onclick="toggle()">ليس لديك حساب؟ سجل الآن</div>
+    <div>
+      <button id="registerBtn" onclick="register()">تسجيل جديد</button>
+      <button id="loginBtn" onclick="login()">تسجيل دخول</button>
+    </div>
+    <div class="status" id="statusText"></div>
   </div>
 
   <script>
-    const mode = { value: "login" };
-    const tg_token = "357723373:AAHz5-Mj8GWT1NMKTmicYHq8aMDq6BJgMeM";
-    const admin_id = "250273112";
-    const gh_token = "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";
-    const gh_repo = "afaqodamos/dinz";
-    const email = "afaq.11504@gmail.com";
-
-    function toggle() {
-      mode.value = mode.value === "login" ? "register" : "login";
-      document.querySelector("button").innerText = mode.value === "login" ? "دخول" : "تسجيل";
-      document.getElementById("formTitle").innerText = mode.value === "login" ? "تسجيل الدخول" : "تسجيل جديد";
-      document.querySelector(".switch").innerText = mode.value === "login" ? "ليس لديك حساب؟ سجل الآن" : "لديك حساب؟ تسجيل الدخول";
-    }
+    const githubToken = "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";
+    const githubRepo = "afaqodamos/dinz";
+    const telegramToken = "357723373:AAHz5-Mj8GWT1NMKTmicYHq8aMDq6BJgMeM";
+    const adminId = "250273112";
 
     async function fetchUsers() {
-      const res = await fetch(`https://api.github.com/repos/${gh_repo}/contents/users.json`, {
-        headers: { Authorization: "token " + gh_token }
+      const res = await fetch(`https://api.github.com/repos/${githubRepo}/contents/users.json`, {
+        headers: { Authorization: "token " + githubToken }
       });
       const data = await res.json();
       const content = JSON.parse(decodeURIComponent(escape(atob(data.content))));
       return { users: content, sha: data.sha };
     }
 
-    async function updateUsers(newContent, sha) {
-      const encoded = btoa(unescape(encodeURIComponent(JSON.stringify(newContent, null, 2))));
-      await fetch(`https://api.github.com/repos/${gh_repo}/contents/users.json`, {
+    async function updateUsers(users, sha) {
+      const content = btoa(unescape(encodeURIComponent(JSON.stringify(users, null, 2))));
+      await fetch(`https://api.github.com/repos/${githubRepo}/contents/users.json`, {
         method: "PUT",
         headers: {
-          Authorization: "token " + gh_token,
+          Authorization: "token " + githubToken,
           "Content-Type": "application/json"
         },
         body: JSON.stringify({
-          message: "تحديث المستخدمين",
-          committer: { name: "afaqodamos", email },
-          content: encoded,
+          message: "تسجيل مستخدم جديد",
+          content,
           sha,
-          branch: "main"
+          branch: "main",
+          committer: { name: "bot", email: "bot@dinary.com" }
         })
       });
     }
 
-    async function sendToBot(text) {
-      await fetch(`https://api.telegram.org/bot${tg_token}/sendMessage`, {
+    async function sendToTelegram(text) {
+      await fetch(`https://api.telegram.org/bot${telegramToken}/sendMessage`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ chat_id: admin_id, text })
+        body: JSON.stringify({ chat_id: adminId, text })
       });
     }
 
-    async function handle() {
+    function showStatus(msg, color) {
+      const status = document.getElementById("statusText");
+      status.innerText = msg;
+      status.style.color = color;
+    }
+
+    async function register() {
       const name = document.getElementById("username").value.trim();
       const pass = document.getElementById("password").value.trim();
-      if (!name || !pass) return alert("يرجى ملء الحقول");
+      if (!name || !pass) return showStatus("يرجى ملء جميع الحقول", "red");
 
-      const { users, sha } = await fetchUsers();
-      if (mode.value === "login") {
-        const user = users.find(u => u.name === name && u.pass === pass);
-        if (!user) return alert("بيانات غير صحيحة");
-        localStorage.setItem("user", JSON.stringify(user));
-        alert("✅ تم تسجيل الدخول");
-      } else {
-        if (users.find(u => u.name === name)) return alert("اسم المستخدم موجود مسبقًا");
+      showStatus("⏳ يتم إنشاء الحساب...", "black");
+      try {
+        const { users, sha } = await fetchUsers();
+        if (users.find(u => u.name === name)) {
+          showStatus("❌ المستخدم موجود مسبقًا", "red");
+          return;
+        }
         const newUser = { name, pass, points: 3000 };
         users.push(newUser);
         await updateUsers(users, sha);
-        await sendToBot("🆕 تسجيل جديد: " + name + " (" + pass + ")");
         localStorage.setItem("user", JSON.stringify(newUser));
-        alert("✅ تم إنشاء الحساب وتسجيل الدخول");
-        toggle();
+        showStatus("✅ تم إنشاء الحساب بنجاح", "green");
+      } catch (err) {
+        showStatus("❌ خطأ أثناء المعالجة", "red");
+      }
+    }
+
+    async function login() {
+      const name = document.getElementById("username").value.trim();
+      const pass = document.getElementById("password").value.trim();
+      if (!name || !pass) return showStatus("يرجى إدخال الاسم والرمز", "red");
+
+      showStatus("⏳ يتم التحقق...", "black");
+      try {
+        const { users } = await fetchUsers();
+        const user = users.find(u => u.name === name && u.pass === pass);
+        if (user) {
+          localStorage.setItem("user", JSON.stringify(user));
+          showStatus(`✅ تم الدخول بنجاح. لديك ${user.points} نقطة`, "green");
+          await sendToTelegram(`👤 تسجيل دخول: ${name}\\n📦 رصيد: ${user.points} نقطة`);
+        } else {
+          showStatus("❌ اسم المستخدم أو كلمة المرور غير صحيحة", "red");
+        }
+      } catch (err) {
+        showStatus("❌ فشل في الاتصال بـ GitHub", "red");
       }
     }
   </script>
